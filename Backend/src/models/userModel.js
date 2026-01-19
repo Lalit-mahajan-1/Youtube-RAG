@@ -1,4 +1,7 @@
 import pool from "../config/db.js";
+import bcrypt from "bcrypt"
+import dotenv from "dotenv";
+dotenv.config(); 
 
 export const getAllUsersService = async () =>{
     const result = await pool.query("select * from users");
@@ -10,8 +13,10 @@ export const getUserByIdService = async (id) =>{
     return result.rows[0]
   }
 
-export const createUserService = async (name,email) =>{
-    const result = await pool.query("insert into users (name,email) values ($1,$2) returning *",[name,email]);
+export const createUserService = async (name,email,password) =>{
+    const salt = bcrypt.genSaltSync(process.env.SALTROUNDS);
+    const hash = bcrypt.hashSync(password, salt);
+    const result = await pool.query("insert into users (name,email,password) values ($1,$2,$3) returning *",[name,email,hash]);
     
     return result.rows[0];
 }
