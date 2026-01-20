@@ -1,21 +1,40 @@
-import { BrowserRouter ,Route,Routes} from "react-router";
-import Register from './User/Register'
+import { BrowserRouter, Route, Routes, Navigate } from "react-router";
+import Register from "./User/Register";
 import Login from "./User/Login";
+import Home from "./Home";
+import { AuthProvider, AuthContext } from "./User/AuthContext";
+import { useContext } from "react";
 
-function App() {
+function AppRoutes() {
+  const { isLoggedIn, user} = useContext(AuthContext);
+
 
   return (
-    <>
-    <BrowserRouter>
     <Routes>
-      <Route  path="register" element={<Register/>}/>
-      <Route  path="login" element={<Login/>}/>
+      <Route
+        path="/login"
+        element={!isLoggedIn ? <Login /> : <Navigate to="/home" />}
+      />
+      <Route
+        path="/register"
+        element={!isLoggedIn ? <Register /> : <Navigate to="/home" />}
+      />
+      <Route
+        path="/home"
+        element={isLoggedIn ? <Home props={user}/> : <Navigate to="/login" />}
+      />
     </Routes>
-    
-    
-    </BrowserRouter>
-    </>
-  )
+  );
 }
 
-export default App
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+
+export default App;

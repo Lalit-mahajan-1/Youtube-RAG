@@ -1,7 +1,7 @@
-import {useState} from 'react'
-
+import { useState } from 'react'
+import axios from "axios"
 const Login = () => {
-    const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     email: '',
     password: ''
   })
@@ -15,12 +15,13 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    try{ console.log(formData)
-         const res = await axios.post(`${import.meta.env.VITE_BACKEND_API}/api/user`,formData);
-         console.log(res);
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_API}/api/login`, formData,
+        { withCredentials: true });
+      console.log(res);
     }
-    catch(err){
-         console.log(err)
+    catch (err) {
+      console.log(err)
     }
   }
 
@@ -41,7 +42,7 @@ const Login = () => {
 
         <br />
 
-         <div>
+        <div>
           <label>Password:</label><br />
           <input
             type="password"
@@ -50,9 +51,9 @@ const Login = () => {
             onChange={handleChange}
             placeholder="Enter your password"
           />
-          </div>
+        </div>
 
-          <br></br>
+        <br></br>
         <button type="submit">Submit</button>
       </form>
     </div>
