@@ -1,13 +1,18 @@
-import { BrowserRouter, Route, Routes, Navigate } from "react-router";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router";
+import { useContext } from "react";
+
 import Register from "./User/Register";
 import Login from "./User/Login";
 import Home from "./Home";
 import { AuthProvider, AuthContext } from "./User/AuthContext";
-import { useContext } from "react";
 
 function AppRoutes() {
-  const { isLoggedIn, user} = useContext(AuthContext);
+  const { isLoggedIn } = useContext(AuthContext);
 
+  // 🔴 VERY IMPORTANT: wait for auth check to finish
+  if (isLoggedIn === null) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Routes>
@@ -15,25 +20,36 @@ function AppRoutes() {
         path="/login"
         element={!isLoggedIn ? <Login /> : <Navigate to="/home" />}
       />
+
       <Route
         path="/register"
         element={!isLoggedIn ? <Register /> : <Navigate to="/home" />}
       />
+
+      {/* protected routes */}
       <Route
         path="/home"
-        element={isLoggedIn ? <Home props={user}/> : <Navigate to="/login" />}
+        element={isLoggedIn ? <Home /> : <Navigate to="/login" />}
       />
+
+      <Route
+        path="/home/:id"
+        element={isLoggedIn ? <Home /> : <Navigate to="/login" />}
+      />
+
+      {/* fallback */}
+      <Route path="*" element={<Navigate to="/home" />} />
     </Routes>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
         <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

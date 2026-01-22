@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import axios from "axios"
+import { useNavigate } from "react-router";
+
 const Login = () => {
+  let navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -18,7 +21,6 @@ const Login = () => {
     try {
       const res = await axios.post(`${import.meta.env.VITE_BACKEND_API}/api/login`, formData,
         { withCredentials: true });
-      console.log(res);
     }
     catch (err) {
       console.log(err)
