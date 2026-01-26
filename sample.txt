@@ -1,0 +1,4 @@
+ conda deactivate myenv ; cd ml-backend ; .\venv\Scripts\activate   
+ cd frontend ; npm run dev
+ cd backend ; npm run dev
+ pip install -r requirements.txt

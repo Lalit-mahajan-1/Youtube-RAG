@@ -124,12 +124,11 @@ export const loginuser = async (req, res, next) => {
 };
 
 
-export const logoutUser = async(req,res,next) =>{
-  try {
-    res.clearCookie("jwt", { httpOnly: true, sameSite: process.env.NODE_ENV==="production"?"None":"lax",secure: true  });
-    return res.status(200).json({ message: "Logged out successfully" });
-  } catch (error) {
-    return res.status(500).json({ message: "Logout failed", error });
-  }
-  
-}
+export const logoutUser = async (req, res) => {
+  res.clearCookie("jwt", {
+    httpOnly: true,
+    sameSite: "strict",
+  });
+
+  return res.status(200).json({ message: "Logged out successfully" });
+};
