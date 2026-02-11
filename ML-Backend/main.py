@@ -14,7 +14,7 @@ import models
 from models import Video, ChatMessage
 from database import engine, SessionLocal
 
-from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
+from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 
 from langchain_google_genai import (
     GoogleGenerativeAIEmbeddings,
@@ -142,7 +142,6 @@ class QRequest(BaseModel):
     Query: str
 
 # ------------------ ROUTES ------------------
-
 @app.post("/url/{user_id}")
 def load_video(user_id: int, data: UrlRequest, db: db_dependency):
     try:
@@ -161,8 +160,15 @@ def load_video(user_id: int, data: UrlRequest, db: db_dependency):
                 "video_info": existing
             }
         
-        # Fetch transcript - CORRECTED METHOD
-        transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+        # Fetch transcript - Try different approaches
+        try:
+            # Method 1: Direct get_transcript
+            transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+        except AttributeError:
+            # Method 2: If get_transcript doesn't exist, try list_transcripts
+            transcript_data = YouTubeTranscriptApi.list_transcripts(video_id)
+            transcript = transcript_data.find_transcript(['en'])
+            transcript_list = transcript.fetch()
         
         # Combine transcript text
         full_text = " ".join([entry['text'] for entry in transcript_list])
@@ -198,9 +204,20 @@ def load_video(user_id: int, data: UrlRequest, db: db_dependency):
             "error": "Transcripts are disabled for this video",
             "status": "failed"
         }
+    except NoTranscriptFound:
+        return {
+            "error": "No transcript found for this video",
+            "status": "failed"
+        }
+    except ValueError as e:
+        return {
+            "error": f"Invalid URL: {str(e)}",
+            "status": "failed"
+        }
     except Exception as e:
-        # Log the actual error for debugging
         print(f"Error loading video: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {
             "error": f"Failed to load video: {str(e)}",
             "status": "failed"
