@@ -89,11 +89,19 @@ parser = StrOutputParser()
 # ------------------ HELPERS ------------------
 
 def extract_video_id(url: str):
-    pattern = r"(?:v=|\/)([0-9A-Za-z_-]{11})"
-    match = re.search(pattern, url)
-    if not match:
-        raise ValueError("Invalid YouTube URL")
-    return match.group(1)
+    """Extract video ID from YouTube URL"""
+    patterns = [
+        r"(?:v=|\/)([0-9A-Za-z_-]{11})",
+        r"(?:embed\/)([0-9A-Za-z_-]{11})",
+        r"(?:watch\?v=)([0-9A-Za-z_-]{11})"
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+    
+    raise ValueError(f"Invalid YouTube URL: {url}")
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
@@ -136,33 +144,67 @@ class QRequest(BaseModel):
 # ------------------ ROUTES ------------------
 
 @app.post("/url/{user_id}")
-def load_video(user_id:int,data: UrlRequest, db: db_dependency):
-    video_id = extract_video_id(data.URL)
-
+def load_video(user_id: int, data: UrlRequest, db: db_dependency):
     try:
-        transcript_list = YouTubeTranscriptApi().fetch(video_id)
-
-        full_text = " ".join([t.text for t in transcript_list])
-
+        # Extract video ID
+        video_id = extract_video_id(data.URL)
+        
+        # Check if video already exists for this user
+        existing = db.query(Video).filter(
+            Video.user_id == user_id,
+            Video.video_id == video_id
+        ).first()
+        
+        if existing:
+            return {
+                "message": "Video already exists",
+                "video_info": existing
+            }
+        
+        # Fetch transcript - CORRECTED METHOD
+        transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+        
+        # Combine transcript text
+        full_text = " ".join([entry['text'] for entry in transcript_list])
+        
+        # Generate chunks and add to vector store
         chunks = generate_chunks(full_text, user_id, video_id)
         vector_store = get_vector_store()
         vector_store.add_documents(chunks)
-
+        
+        # Save to database
         new_video = Video(
             user_id=user_id,
             video_id=video_id,
             url=data.URL,
             transcript=full_text
         )
-
+        
         db.add(new_video)
         db.commit()
         db.refresh(new_video)
-
-        return {"video_info": new_video}
-
+        
+        return {
+            "message": "Video loaded successfully",
+            "video_info": {
+                "id": new_video.id,
+                "video_id": new_video.video_id,
+                "url": new_video.url
+            }
+        }
+        
     except TranscriptsDisabled:
-        return {"error": "No captions available for this video"}
+        return {
+            "error": "Transcripts are disabled for this video",
+            "status": "failed"
+        }
+    except Exception as e:
+        # Log the actual error for debugging
+        print(f"Error loading video: {str(e)}")
+        return {
+            "error": f"Failed to load video: {str(e)}",
+            "status": "failed"
+        }
 
 @app.get("/get-url/{user_id}")
 def get_all_urls(user_id: int, db: db_dependency):
