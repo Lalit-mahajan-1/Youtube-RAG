@@ -24,7 +24,6 @@ app.use(errorHandling)
 
 app.use("/api",userRoutes);
 app.use(cookieParser());
-createUserTable()
 
 app.get("/",requireAuth ,async (req, res) => {
   const result = await pool.query("select current_database()");
@@ -43,6 +42,12 @@ app.get("/api/auth/me",requireAuth,async(req,res)=>{
 })
 
 
-app.listen(port, () => {
-  console.log(`server is running on ${port}`);
+app.listen(port, async () => {
+  try {
+    await createUserTable();
+    console.log("User table ensured");
+    console.log(`server running on ${port}`);
+  } catch (err) {
+    console.error("Table creation failed:", err);
+  }
 });
