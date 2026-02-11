@@ -22,7 +22,7 @@ import UserChat from "../Page/UserChat";
 import { Link } from "react-router";
 import axios from "axios";
 
-const MotionAppBar = motion(AppBar);
+const MotionAppBar = motion.create(AppBar);
 
 function Navbar() {
   const { User, logout } = useContext(AuthContext);
@@ -31,13 +31,13 @@ function Navbar() {
 
   if (!User) return null;
 
-  const handleLogout = async() => {
+  const handleLogout = async () => {
     try {
-     const res = await axios.post(`${import.meta.env.VITE_BACKEND_API}/api/logout`,{},
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_API}/api/logout`, {},
         { withCredentials: true });
-     navigate("/login");
+      navigate("/login");
     } catch (error) {
-        console.log(error)
+      console.log(error)
     }
   };
 
@@ -93,7 +93,7 @@ function Navbar() {
                   letterSpacing: 0.3,
                 }}
               >
-              <Link to = "/home"> VideoChat</Link>  
+                <Link to="/home"> VideoChat</Link>
               </Typography>
             </Box>
           </Box>
@@ -179,7 +179,7 @@ function Navbar() {
             >
               Chats
             </Typography>
-   
+
           </Box>
           <Divider sx={{ borderColor: "#111827" }} />
 

@@ -15,11 +15,11 @@ const VideoUpload = ({ prop }) => {
     if (!videourl.trim()) return;
 
     try {
+      console.log(prop);
       await axios.post(
         `${import.meta.env.VITE_ML_API}/url/${prop}`,
         {
           URL: videourl,
-          Id: prop,
         },
         { withCredentials: true }
       );
