@@ -130,15 +130,14 @@ def generate_chunks(text: str, user_id: int, video_id: str):
 
 class UrlRequest(BaseModel):
     URL: str
-    Id: int
 
 class QRequest(BaseModel):
     Query: str
 
 # ------------------ ROUTES ------------------
 
-@app.post("/url")
-def load_video(data: UrlRequest, db: db_dependency):
+@app.post("/url/{user_id}")
+def load_video(user_id:int,data: UrlRequest, db: db_dependency):
     video_id = extract_video_id(data.URL)
 
     try:
@@ -146,12 +145,12 @@ def load_video(data: UrlRequest, db: db_dependency):
 
         full_text = " ".join([t.text for t in transcript_list])
 
-        chunks = generate_chunks(full_text, data.Id, video_id)
+        chunks = generate_chunks(full_text, user_id, video_id)
         vector_store = get_vector_store()
         vector_store.add_documents(chunks)
 
         new_video = Video(
-            user_id=data.Id,
+            user_id=user_id,
             video_id=video_id,
             url=data.URL,
             transcript=full_text

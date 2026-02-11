@@ -16,7 +16,7 @@ const VideoUpload = ({ prop }) => {
 
     try {
       await axios.post(
-        `${import.meta.env.VITE_ML_API}/url`,
+        `${import.meta.env.VITE_ML_API}/url/${prop}`,
         {
           URL: videourl,
           Id: prop,
