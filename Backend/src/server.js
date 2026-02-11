@@ -13,7 +13,10 @@ const port = process.env.PORT || 3001;
 
 app.use(express.json());
 app.use(cors({
-  origin: "*", 
+  origin: [
+    "http://localhost:5173",
+    "https://youtube-rag-alpha.vercel.app"
+  ], 
   credentials: true
 }));
 app.use(errorHandling)
